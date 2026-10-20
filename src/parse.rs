@@ -1,5 +1,3 @@
-use bstr::ByteSlice;
-use bstr::ByteVec;
 use std::{
     fs::File,
     io::{self, BufRead},
@@ -15,17 +13,40 @@ macro_rules! unlock {
     };
 }
 
-pub fn read(path: impl AsRef<Path>) -> Vec<Vec<u8>> {
-    let contents: Vec<u8> = std::fs::read(path).expect("Uh oh!");
-    let program: Vec<&[u8]> = contents.split_str("é").to_owned().collect();
-    return program.into_iter().map(|instr| instr.to_vec()).collect();
+pub fn read(path: impl AsRef<Path>) -> io::Result<Vec<String>> {
+    io::BufReader::new(File::open(path)?).lines().collect()
+}
+
+pub fn parse_defs(lines: &Vec<String>) -> io::Result<Vec<String>> {
+    match read("./defs.txt") {
+        Ok(str) => {
+            let mut result = lines.clone();
+            for replacement in str {
+                let rep: Vec<&str> = replacement.split_whitespace().collect();
+                result = result.iter().map(|s| s.replace(rep[0], rep[1])).collect();
+            }
+            Ok(result)
+        }
+        Err(e) => {
+            println!("Uh oh! {e}");
+            std::process::exit(1);
+        }
+    }
 }
 
 pub fn parse_start() {
-    parse(read("./program.txt"));
+    match read("./program.txt") {
+        Ok(str) => match parse_defs(&str) {
+            Ok(str) => parse(str),
+            Err(e) => println!("Uh oh! {e}"),
+        },
+        Err(e) => {
+            println!("Uh oh! {e}");
+        }
+    }
 }
 
-pub fn parse(str: Vec<Vec<u8>>) {
+pub fn parse(str: Vec<String>) {
     if str.len() > 65536 || str.len() == 0 {
         println!(
             "bro ur program is too big, scale it back a little would ya?\neither that or you put in an empty file you stupid idiot"
@@ -48,30 +69,78 @@ pub fn parse(str: Vec<Vec<u8>>) {
     }
 }
 
-pub fn parse_instruction(instruct: Vec<u8>) -> bool {
-    let instr = instruct.as_bytes();
+pub fn parse_instruction(instruct: String) -> bool {
+    let instr: Vec<&str> = instruct.split_whitespace().collect::<Vec<&str>>();
     match instr[0] {
-        b'A' => {
-            ins::print_char_inplace(instr);
+        "prci" => {
+            ins::print_char_immediate(instr);
             return true;
         }
-        b'B' => {
-            ins::print_char_a();
+        "prcr" => {
+            ins::print_char_register(instr);
             return true;
         }
-        b'C' => {
-            ins::load_immediate_a(instr);
+        "prab" => {
+            ins::prab(instr);
             return true;
         }
-        b'D' => {
+        "li" => {
+            ins::load_immediate(instr);
+            return true;
+        }
+        "jmp" => {
             ins::jump(instr);
             return false;
         }
-        b'E' => {
+        "ret" => {
             ins::ret();
             return true;
         }
-        b'Z' => {
+        "ldr" => {
+            ins::ldr(instr);
+            return true;
+        }
+        "str" => {
+            ins::str(instr);
+            return true;
+        }
+        "shl" => {
+            ins::shl(instr);
+            return true;
+        }
+        "shr" => {
+            ins::shr(instr);
+            return true;
+        }
+        "and" => {
+            ins::and(instr);
+            return true;
+        }
+        "or" => {
+            ins::or(instr);
+            return true;
+        }
+        "xor" => {
+            ins::xor(instr);
+            return true;
+        }
+        "strs" => {
+            ins::strs(instr);
+            return true;
+        }
+        "prns" => {
+            ins::prns(instr);
+            return true;
+        }
+        "inc" => {
+            ins::inc(instr);
+            return true;
+        }
+        "dec" => {
+            ins::dec(instr);
+            return true;
+        }
+        "end" => {
             std::process::exit(0);
         }
         _ => {

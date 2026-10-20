@@ -1,0 +1,3 @@
+XorResult 0x0030
+Two 0x0002
+Three 0x0003

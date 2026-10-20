@@ -1,8 +1,0 @@
-li a Two
-li b Three
-xor a b c
-str c XorResult
-ldr c XorResult
-prab c
-theendisnear
-end

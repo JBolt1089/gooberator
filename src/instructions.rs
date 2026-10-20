@@ -277,3 +277,19 @@ pub fn jz(instr: Vec<&str>) -> bool {
     }
     return true;
 }
+
+pub fn jnz(instr: Vec<&str>) -> bool {
+    if instr.len() != 3 {
+        report_error("wrong number of arguments given");
+    }
+    let mut mem = lock!();
+
+    let val = mem.clone().get_reg_str(instr[1]);
+    if val != 0 {
+        let pc = mem.reg_pc;
+        mem.stack.push(pc);
+        mem.reg_pc = parse_hex_arg(instr[2]);
+        return false;
+    }
+    return true;
+}

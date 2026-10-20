@@ -151,6 +151,9 @@ pub fn parse_instruction(instruct: String) -> bool {
         "jz" => {
             return ins::jz(instr);
         }
+        "jnz" => {
+            return ins::jnz(instr);
+        }
         "end" => {
             std::process::exit(0);
         }

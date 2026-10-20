@@ -4,4 +4,5 @@ xor a b c
 str c XorResult
 ldr c XorResult
 prab c
+theendisnear
 end

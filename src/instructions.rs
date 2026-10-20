@@ -9,7 +9,7 @@ macro_rules! lock {
     };
 }
 
-fn report_error(str: &str) {
+pub fn report_error(str: &str) {
     let mem = lock!();
     println!(
         "Error: {}\nRegisters: {:?}",
@@ -236,4 +236,44 @@ pub fn dec(instr: Vec<&str>) {
     num -= 1;
 
     mem.update_reg_str(instr[1], num);
+}
+
+pub fn add(instr: Vec<&str>) {
+    if instr.len() != 4 {
+        report_error("wrong number of arguments given");
+    }
+
+    let mut mem = lock!();
+    let input1 = mem.clone().get_reg_str(instr[1]);
+    let input2 = mem.clone().get_reg_str(instr[2]);
+
+    mem.update_reg_str(instr[3], input1 + input2);
+}
+
+pub fn sub(instr: Vec<&str>) {
+    if instr.len() != 4 {
+        report_error("wrong number of arguments given");
+    }
+
+    let mut mem = lock!();
+    let input1 = mem.clone().get_reg_str(instr[1]);
+    let input2 = mem.clone().get_reg_str(instr[2]);
+
+    mem.update_reg_str(instr[3], input1 - input2);
+}
+
+pub fn jz(instr: Vec<&str>) -> bool {
+    if instr.len() != 3 {
+        report_error("wrong number of arguments given");
+    }
+    let mut mem = lock!();
+
+    let val = mem.clone().get_reg_str(instr[1]);
+    if val == 0 {
+        let pc = mem.reg_pc;
+        mem.stack.push(pc);
+        mem.reg_pc = parse_hex_arg(instr[2]);
+        return false;
+    }
+    return true;
 }

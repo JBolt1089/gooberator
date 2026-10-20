@@ -140,8 +140,23 @@ pub fn parse_instruction(instruct: String) -> bool {
             ins::dec(instr);
             return true;
         }
+        "add" => {
+            ins::add(instr);
+            return true;
+        }
+        "sub" => {
+            ins::sub(instr);
+            return true;
+        }
+        "jz" => {
+            return ins::jz(instr);
+        }
         "end" => {
             std::process::exit(0);
+        }
+        "theendisnear" => {
+            ins::report_error("🔔 the end is near");
+            return true;
         }
         _ => {
             std::process::exit(1);

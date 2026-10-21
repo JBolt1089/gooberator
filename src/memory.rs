@@ -1,6 +1,7 @@
 use std::sync::{LazyLock, Mutex};
 
 #[derive(Clone)]
+/// Struct representing the gooberator's memory
 pub struct Memory {
     pub reg_pc: u16,
     pub reg_a: u16,
@@ -36,7 +37,8 @@ impl Memory {
         }
     }
 
-    pub fn get_reg_str(self, str: &str) -> u16 {
+    /// Get the value from the register specified by the arg str: &str
+    pub fn get_reg_str(&self, str: &str) -> u16 {
         match str {
             "a" => {
                 return self.reg_a.clone();
@@ -58,6 +60,8 @@ impl Memory {
     }
 }
 
+/// The actual memory used in instructions
+/// It's recommended to make a macro to lock the Mutex for convenience
 pub static MEM: LazyLock<Mutex<Memory>> = LazyLock::new(|| {
     Mutex::new(Memory {
         reg_pc: 0,

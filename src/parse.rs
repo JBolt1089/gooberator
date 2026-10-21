@@ -7,18 +7,21 @@ use std::{
 use crate::instructions as ins;
 use crate::memory;
 
+/// Macro for unlocking the Mutex
 macro_rules! unlock {
     () => {
         memory::MEM.lock().unwrap()
     };
 }
 
+/// Read file line by line and return into a vector of strings
 pub fn read(path: impl AsRef<Path>) -> io::Result<Vec<String>> {
     io::BufReader::new(File::open(path)?).lines().collect()
 }
 
-pub fn parse_defs(lines: &Vec<String>) -> io::Result<Vec<String>> {
-    match read("./defs.txt") {
+/// Parse and repalce all the defs in the program vector with their associated value
+pub fn parse_defs(lines: &Vec<String>, path: &String) -> io::Result<Vec<String>> {
+    match read(path) {
         Ok(str) => {
             let mut result = lines.clone();
             for replacement in str {
@@ -34,9 +37,10 @@ pub fn parse_defs(lines: &Vec<String>) -> io::Result<Vec<String>> {
     }
 }
 
-pub fn parse_start() {
-    match read("./program.txt") {
-        Ok(str) => match parse_defs(&str) {
+/// Pre-loop parsing
+pub fn parse_start(program_file: &String, refs_file: &String) {
+    match read(program_file) {
+        Ok(str) => match parse_defs(&str, refs_file) {
             Ok(str) => parse(str),
             Err(e) => println!("Uh oh! {e}"),
         },
@@ -46,6 +50,7 @@ pub fn parse_start() {
     }
 }
 
+/// Main parsing loop. parse_start() calls this function
 pub fn parse(str: Vec<String>) {
     if str.len() > 65536 || str.len() == 0 {
         println!(
@@ -69,6 +74,7 @@ pub fn parse(str: Vec<String>) {
     }
 }
 
+/// Parse an instruction and call its respective function
 pub fn parse_instruction(instruct: String) -> bool {
     let instr: Vec<&str> = instruct.split_whitespace().collect::<Vec<&str>>();
     match instr[0] {
@@ -158,7 +164,7 @@ pub fn parse_instruction(instruct: String) -> bool {
             std::process::exit(0);
         }
         "theendisnear" => {
-            ins::report_error("🔔 the end is near");
+            ins::report_error("🔔 the end is near"); // huh
             return true;
         }
         _ => {

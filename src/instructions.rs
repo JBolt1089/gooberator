@@ -3,12 +3,14 @@ use std::process::exit;
 
 use crate::memory;
 
+/// Macro for unlocking the Mutex
 macro_rules! lock {
     () => {
         memory::MEM.lock().unwrap()
     };
 }
 
+/// Report an error and end the process
 pub fn report_error(str: &str) {
     let mem = lock!();
     println!(
@@ -19,6 +21,7 @@ pub fn report_error(str: &str) {
     exit(1)
 }
 
+/// Parse a hexadecimal argument
 fn parse_hex_arg(str: &str) -> u16 {
     match str.strip_prefix("0x") {
         Some(x) => match u16::from_str_radix(x, 16) {
@@ -42,6 +45,7 @@ fn parse_hex_arg(str: &str) -> u16 {
     }
 }
 
+/// Print an immediate value as a char
 pub fn print_char_immediate(instr: Vec<&str>) {
     if instr.len() != 2 {
         report_error("wrong number of arguments given");
@@ -51,12 +55,14 @@ pub fn print_char_immediate(instr: Vec<&str>) {
     print!("{c}");
 }
 
+/// Print a register as a char
 pub fn print_char_register(instr: Vec<&str>) {
     let mem = lock!();
 
-    print!("{}", (mem.clone().get_reg_str(instr[1]) as u8) as char);
+    print!("{}", (mem.get_reg_str(instr[1]) as u8) as char);
 }
 
+/// Load an immediate value into a register
 pub fn load_immediate(instr: Vec<&str>) {
     if instr.len() != 3 {
         report_error("wrong number of arguments given");
@@ -67,6 +73,7 @@ pub fn load_immediate(instr: Vec<&str>) {
     mem.update_reg_str(instr[1], parse_hex_arg(instr[2]));
 }
 
+/// Jump and put the return address on the stack
 pub fn jump(instr: Vec<&str>) {
     if instr.len() != 2 {
         report_error("wrong number of arguments given");
@@ -78,6 +85,7 @@ pub fn jump(instr: Vec<&str>) {
     mem.reg_pc = parse_hex_arg(instr[1]);
 }
 
+/// Return from a jump
 pub fn ret() {
     let mut mem = lock!();
 
@@ -88,6 +96,7 @@ pub fn ret() {
     }
 }
 
+/// Load a value from memory into a register
 pub fn ldr(instr: Vec<&str>) {
     if instr.len() != 3 {
         report_error("wrong number of arguments given");
@@ -97,16 +106,18 @@ pub fn ldr(instr: Vec<&str>) {
     mem.update_reg_str(instr[1], num);
 }
 
+/// Store a register's value in memory
 pub fn str(instr: Vec<&str>) {
     if instr.len() != 3 {
         report_error("wrong number of arguments given");
     }
     let mut mem = lock!();
 
-    let num = mem.clone().get_reg_str(instr[1]);
+    let num = mem.get_reg_str(instr[1]);
     mem.memory[parse_hex_arg(instr[2]) as usize] = num;
 }
 
+/// Shift a register left by a given amount
 pub fn shl(instr: Vec<&str>) {
     if instr.len() != 3 {
         report_error("wrong number of arguments given");
@@ -114,11 +125,12 @@ pub fn shl(instr: Vec<&str>) {
 
     let mut mem = lock!();
 
-    let mut num = mem.clone().get_reg_str(instr[1]);
+    let mut num = mem.get_reg_str(instr[1]);
     num <<= parse_hex_arg(instr[2]);
     mem.update_reg_str(instr[1], num);
 }
 
+/// Shift a register right by a given amount
 pub fn shr(instr: Vec<&str>) {
     if instr.len() != 3 {
         report_error("wrong number of arguments given");
@@ -126,11 +138,12 @@ pub fn shr(instr: Vec<&str>) {
 
     let mut mem = lock!();
 
-    let mut num = mem.clone().get_reg_str(instr[1]);
+    let mut num = mem.get_reg_str(instr[1]);
     num >>= parse_hex_arg(instr[2]);
     mem.update_reg_str(instr[1], num);
 }
 
+/// AND input1 & input2 and store the result in output
 pub fn and(instr: Vec<&str>) {
     if instr.len() != 4 {
         report_error("wrong number of arguments given");
@@ -138,13 +151,14 @@ pub fn and(instr: Vec<&str>) {
 
     let mut mem = lock!();
 
-    let input1 = mem.clone().get_reg_str(instr[1]);
-    let input2 = mem.clone().get_reg_str(instr[2]);
+    let input1 = mem.get_reg_str(instr[1]);
+    let input2 = mem.get_reg_str(instr[2]);
     let output = input1 & input2;
 
     mem.update_reg_str(instr[3], output);
 }
 
+/// OR input1 | input2 and store the result in output
 pub fn or(instr: Vec<&str>) {
     if instr.len() != 4 {
         report_error("wrong number of arguments given");
@@ -152,13 +166,14 @@ pub fn or(instr: Vec<&str>) {
 
     let mut mem = lock!();
 
-    let input1 = mem.clone().get_reg_str(instr[1]);
-    let input2 = mem.clone().get_reg_str(instr[2]);
+    let input1 = mem.get_reg_str(instr[1]);
+    let input2 = mem.get_reg_str(instr[2]);
     let output = input1 | input2;
 
     mem.update_reg_str(instr[3], output);
 }
 
+/// XOR input1 ^ input2 and store the result in output
 pub fn xor(instr: Vec<&str>) {
     if instr.len() != 4 {
         report_error("wrong number of arguments given");
@@ -166,13 +181,14 @@ pub fn xor(instr: Vec<&str>) {
 
     let mut mem = lock!();
 
-    let input1 = mem.clone().get_reg_str(instr[1]);
-    let input2 = mem.clone().get_reg_str(instr[2]);
+    let input1 = mem.get_reg_str(instr[1]);
+    let input2 = mem.get_reg_str(instr[2]);
     let output = input1 ^ input2;
 
     mem.update_reg_str(instr[3], output);
 }
 
+/// Print the given register as binary
 pub fn prab(instr: Vec<&str>) {
     if instr.len() != 2 {
         report_error("wrong number of arguments given");
@@ -180,7 +196,7 @@ pub fn prab(instr: Vec<&str>) {
 
     let mem = lock!();
 
-    println!("\n{:#b}", mem.clone().get_reg_str(instr[1]));
+    println!("\n{:#b}", mem.get_reg_str(instr[1]));
 }
 
 pub fn strs(instr: Vec<&str>) {
@@ -212,6 +228,7 @@ pub fn prns(instr: Vec<&str>) {
     }
 }
 
+/// Increment the given register by one
 pub fn inc(instr: Vec<&str>) {
     if instr.len() != 2 {
         report_error("wrong number of arguments given");
@@ -219,12 +236,13 @@ pub fn inc(instr: Vec<&str>) {
 
     let mut mem = lock!();
 
-    let mut num = mem.clone().get_reg_str(instr[1]);
+    let mut num = mem.get_reg_str(instr[1]);
     num += 1;
 
     mem.update_reg_str(instr[1], num);
 }
 
+/// Decrement the given register by one
 pub fn dec(instr: Vec<&str>) {
     if instr.len() != 2 {
         report_error("wrong number of arguments given");
@@ -232,43 +250,46 @@ pub fn dec(instr: Vec<&str>) {
 
     let mut mem = lock!();
 
-    let mut num = mem.clone().get_reg_str(instr[1]);
+    let mut num = mem.get_reg_str(instr[1]);
     num -= 1;
 
     mem.update_reg_str(instr[1], num);
 }
 
+/// Add input2 to input1 and store the result in output
 pub fn add(instr: Vec<&str>) {
     if instr.len() != 4 {
         report_error("wrong number of arguments given");
     }
 
     let mut mem = lock!();
-    let input1 = mem.clone().get_reg_str(instr[1]);
-    let input2 = mem.clone().get_reg_str(instr[2]);
+    let input1 = mem.get_reg_str(instr[1]);
+    let input2 = mem.get_reg_str(instr[2]);
 
     mem.update_reg_str(instr[3], input1 + input2);
 }
 
+/// Subtract input2 from input1 and store the result in output
 pub fn sub(instr: Vec<&str>) {
     if instr.len() != 4 {
         report_error("wrong number of arguments given");
     }
 
     let mut mem = lock!();
-    let input1 = mem.clone().get_reg_str(instr[1]);
-    let input2 = mem.clone().get_reg_str(instr[2]);
+    let input1 = mem.get_reg_str(instr[1]);
+    let input2 = mem.get_reg_str(instr[2]);
 
     mem.update_reg_str(instr[3], input1 - input2);
 }
 
+/// Jump if the given register is zero
 pub fn jz(instr: Vec<&str>) -> bool {
     if instr.len() != 3 {
         report_error("wrong number of arguments given");
     }
     let mut mem = lock!();
 
-    let val = mem.clone().get_reg_str(instr[1]);
+    let val = mem.get_reg_str(instr[1]);
     if val == 0 {
         let pc = mem.reg_pc;
         mem.stack.push(pc);
@@ -278,13 +299,14 @@ pub fn jz(instr: Vec<&str>) -> bool {
     return true;
 }
 
+/// Jump if the given register is not zero
 pub fn jnz(instr: Vec<&str>) -> bool {
     if instr.len() != 3 {
         report_error("wrong number of arguments given");
     }
     let mut mem = lock!();
 
-    let val = mem.clone().get_reg_str(instr[1]);
+    let val = mem.get_reg_str(instr[1]);
     if val != 0 {
         let pc = mem.reg_pc;
         mem.stack.push(pc);
